@@ -82,7 +82,11 @@ func (*Amazon) GetSessionDurationAttrName() string {
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
 func (amz *Amazon) AssumeRole(roleArn, principalArn string) (*sts.Credentials, error) {
-	svc := sts.New(session.New())
+	sess, err := session.NewSession()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %v", err)
+	}
+	svc := sts.New(sess)
 	input := &sts.AssumeRoleWithSAMLInput{
 		DurationSeconds: aws.Int64(amz.SessionDuration),
 		PrincipalArn:    aws.String(principalArn),
