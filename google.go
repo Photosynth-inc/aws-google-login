@@ -2,7 +2,6 @@ package awslogin
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 
 	"github.com/playwright-community/playwright-go"
@@ -29,57 +28,53 @@ func NewGoogleConfig(idpID, spID string) *Google {
 	}
 }
 
-func (g *Google) Login() (string, error) {
+func (g *Google) Login() (resp string, err error) {
 	if err := playwright.Install(); err != nil {
 		return "", fmt.Errorf("could not install playwright: %v", err)
 	}
-
-	SAMLResponse := ""
 
 	pw, err := playwright.Run(&playwright.RunOptions{
 		Browsers: []string{"chromium"},
 	})
 	if err != nil {
-		return SAMLResponse, fmt.Errorf("unable to run playwright %v", err)
+		return "", fmt.Errorf("unable to run playwright %v", err)
 	}
 
 	browser, err := pw.Chromium.LaunchPersistentContext(ConfigEntry("browser"), playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
 	})
 	if err != nil {
-		return SAMLResponse, fmt.Errorf("could not launch a browser %v", err)
+		return "", fmt.Errorf("could not launch a browser %v", err)
 	}
 
 	page, err := browser.NewPage()
 	if err != nil {
-		return SAMLResponse, fmt.Errorf("could not create page: %v", err)
+		return "", fmt.Errorf("could not create page: %v", err)
 	}
 
-	if _, err := page.Goto(g.LoginURL()); err != nil {
-		return SAMLResponse, fmt.Errorf("could not goto: %v", err)
-	}
-
-	r, err := page.ExpectRequest(g.WaitURL(), func() error {
-		return nil
+	page.OnRequest(func(req playwright.Request) {
+		if req.URL() == g.WaitURL() {
+			fmt.Println("Request received, processing...")
+			data, _ := req.PostData()
+			values, _ := url.ParseQuery(data)
+			resp = values.Get("SAMLResponse")
+		}
 	})
-	if err != nil {
-		return SAMLResponse, fmt.Errorf("could not wait for request: %v", err)
-	}
-	data, err := r.PostData()
-	if err != nil {
-		return SAMLResponse, fmt.Errorf("can not get PostData %v", err)
-	}
 
-	values, err := url.ParseQuery(data)
-	if err != nil {
-		return SAMLResponse, fmt.Errorf("unable to parse PostData %v", err)
+	fmt.Println("Please login to your Google account and press any key to continue...")
+	if _, err := page.Goto(g.LoginURL()); err != nil {
+		return "", fmt.Errorf("could not goto: %v", err)
 	}
+	page.WaitForURL(g.WaitURL())
 
+	if err = page.Close(); err != nil {
+		return "", fmt.Errorf("could not close page: %v", err)
+	}
 	if err = browser.Close(); err != nil {
-		log.Fatalf("could not close browser: %v", err)
+		return "", fmt.Errorf("could not close browser: %v", err)
 	}
 	if err = pw.Stop(); err != nil {
-		log.Fatalf("could not stop Playwright: %v", err)
+		return "", fmt.Errorf("could not stop Playwright: %v", err)
 	}
-	return values.Get("SAMLResponse"), nil
+	return resp, nil
 }
