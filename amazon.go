@@ -1,12 +1,14 @@
 package awslogin
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 )
 
 type Amazon struct {
@@ -81,20 +83,20 @@ func (*Amazon) GetSessionDurationAttrName() string {
 }
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
-func (amz *Amazon) AssumeRole(roleArn, principalArn string) (*sts.Credentials, error) {
-	sess, err := session.NewSession()
+func (amz *Amazon) AssumeRole(ctx context.Context, roleArn, principalArn string) (*types.Credentials, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %v", err)
+		return nil, fmt.Errorf("failed to load configuration: %v", err)
 	}
-	svc := sts.New(sess)
+	svc := sts.NewFromConfig(cfg)
 	input := &sts.AssumeRoleWithSAMLInput{
-		DurationSeconds: aws.Int64(amz.SessionDuration),
+		DurationSeconds: aws.Int32(int32(amz.SessionDuration)),
 		PrincipalArn:    aws.String(principalArn),
 		RoleArn:         aws.String(roleArn),
 		SAMLAssertion:   aws.String(amz.SamlAssertion),
 	}
 
-	result, err := svc.AssumeRoleWithSAML(input)
+	result, err := svc.AssumeRoleWithSAML(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("unable to assume role %v\n", err)
 	}

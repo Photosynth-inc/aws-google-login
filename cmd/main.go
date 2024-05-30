@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	awslogin "github.com/cucxabong/aws-google-login"
 	"github.com/urfave/cli/v2"
 )
@@ -21,7 +22,7 @@ type Options struct {
 }
 
 type CredentialsData struct {
-	*sts.Credentials
+	*types.Credentials
 	AccountId string
 	RoleArn   string
 }
@@ -96,7 +97,7 @@ func handler(c *cli.Context) error {
 	return nil
 }
 
-func AssumeRole(amz *awslogin.Amazon, roleArn string) (*sts.Credentials, error) {
+func AssumeRole(amz *awslogin.Amazon, roleArn string) (*types.Credentials, error) {
 	var principalArn string
 	roles, err := amz.ParseRoles()
 	if err != nil {
@@ -115,7 +116,7 @@ func AssumeRole(amz *awslogin.Amazon, roleArn string) (*sts.Credentials, error) 
 		return nil, fmt.Errorf("role is not configured for your user")
 	}
 
-	return amz.AssumeRole(roleArn, principalArn)
+	return amz.AssumeRole(context.TODO(), roleArn, principalArn)
 }
 
 func main() {
