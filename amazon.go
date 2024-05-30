@@ -39,7 +39,7 @@ func (amz *Amazon) GetAssertion() string {
 func (amz *Amazon) parseRole(role string) (*Role, error) {
 	items := strings.Split(role, ",")
 	if len(items) != 2 {
-		return nil, fmt.Errorf("invalid role string %v\n", role)
+		return nil, fmt.Errorf("invalid role string %v", role)
 	}
 
 	return &Role{
@@ -98,7 +98,7 @@ func (amz *Amazon) AssumeRole(ctx context.Context, roleArn, principalArn string)
 
 	result, err := svc.AssumeRoleWithSAML(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("unable to assume role %v\n", err)
+		return nil, fmt.Errorf("unable to assume role %v", err)
 	}
 
 	return result.Credentials, nil
