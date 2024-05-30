@@ -60,9 +60,6 @@ func handler(c *cli.Context) error {
 	var assertion string
 	var err error
 	opt := NewOptions(c)
-	if err != nil {
-		return err
-	}
 
 	g := awslogin.NewGoogleConfig(opt.IdentityProviderID, opt.ServiceProviderID)
 	assertion, err = g.Login()
