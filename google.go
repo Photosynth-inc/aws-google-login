@@ -43,7 +43,7 @@ func (g *Google) Login() (string, error) {
 		return SAMLResponse, fmt.Errorf("unable to run playwright %v", err)
 	}
 
-	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
+	browser, err := pw.Chromium.LaunchPersistentContext(ConfigEntry("browser"), playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
 	})
 	if err != nil {
