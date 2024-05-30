@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/mxschmitt/playwright-go"
+	"github.com/playwright-community/playwright-go"
 )
 
 type Google struct {
@@ -30,6 +30,10 @@ func NewGoogleConfig(idpID, spID string) *Google {
 }
 
 func (g *Google) Login() (string, error) {
+	if err := playwright.Install(); err != nil {
+		return "", fmt.Errorf("could not install playwright: %v", err)
+	}
+
 	SAMLResponse := ""
 
 	pw, err := playwright.Run(&playwright.RunOptions{
@@ -55,7 +59,12 @@ func (g *Google) Login() (string, error) {
 		return SAMLResponse, fmt.Errorf("could not goto: %v", err)
 	}
 
-	r := page.WaitForRequest(g.WaitURL())
+	r, err := page.ExpectRequest(g.WaitURL(), func() error {
+		return nil
+	})
+	if err != nil {
+		return SAMLResponse, fmt.Errorf("could not wait for request: %v", err)
+	}
 	data, err := r.PostData()
 	if err != nil {
 		return SAMLResponse, fmt.Errorf("can not get PostData %v", err)
