@@ -9,13 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	awslogin "github.com/cucxabong/aws-google-login"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type Options struct {
 	ServiceProviderID  string
 	IdentityProviderID string
-	DurationSeconds    int
+	DurationSeconds    int64
 	RoleName           string
 	AccountIDs         []string
 	SamlAssertion      bool
@@ -27,7 +27,7 @@ type CredentialsData struct {
 	RoleArn   string
 }
 
-func NewOptions(c *cli.Context) *Options {
+func NewOptions(c *cli.Command) *Options {
 	return &Options{
 		ServiceProviderID:  c.String("sp-id"),
 		IdentityProviderID: c.String("idp-id"),
@@ -56,7 +56,7 @@ func JSONWrite(w io.Writer, data []CredentialsData) error {
 	return nil
 }
 
-func handler(c *cli.Context) error {
+func handler(_ context.Context, c *cli.Command) error {
 	var assertion string
 	var err error
 	opt := NewOptions(c)
@@ -120,7 +120,7 @@ func AssumeRole(amz *awslogin.Amazon, roleArn string) (*types.Credentials, error
 }
 
 func main() {
-	app := &cli.App{
+	app := &cli.Command{
 		Name:   "aws-google-login",
 		Usage:  "Acquire temporary AWS credentials via Google SSO (SAML v2)",
 		Action: handler,
@@ -137,14 +137,12 @@ func main() {
 			Aliases:  []string{"s"},
 			Usage:    "Service Provider ID",
 			Required: true,
-			EnvVars:  []string{"SERVICE_PROVIDER_ID"},
 		},
 		&cli.StringFlag{
 			Name:     "idp-id",
 			Aliases:  []string{"i"},
 			Usage:    "Identity Provider ID",
 			Required: true,
-			EnvVars:  []string{"IDENTITY_PROVIDER_ID"},
 		},
 		&cli.StringFlag{
 			Name:     "role-name",
@@ -165,7 +163,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
+	err := app.Run(context.Background(), os.Args)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
