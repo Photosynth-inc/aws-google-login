@@ -4,37 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	awslogin "github.com/Photosynth-inc/aws-google-login"
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	"github.com/urfave/cli/v3"
 )
-
-type CredentialsData struct {
-	*types.Credentials
-	AccountId string
-	RoleArn   string
-}
-
-func GetRoleArn(accountID string, roleName string) string {
-	return fmt.Sprintf("arn:aws:iam::%s:role/%s", accountID, roleName)
-}
-
-func JSONWrite(w io.Writer, data []CredentialsData) error {
-	for _, item := range data {
-		jsonData, err := json.Marshal(item)
-		if err != nil {
-			return err
-		}
-
-		if _, err = fmt.Fprintln(w, string(jsonData)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func handler(_ context.Context, c *cli.Command) (err error) {
 	g := awslogin.NewGoogleConfig(c.String("idp-id"), c.String("sp-id"))
@@ -53,23 +28,18 @@ func handler(_ context.Context, c *cli.Command) (err error) {
 		return err
 	}
 
-	creds := make([]CredentialsData, len(c.StringSlice("account-ids")))
-
-	for idx, accountID := range c.StringSlice("account-ids") {
-		roleArn := GetRoleArn(accountID, c.String("role-name"))
-		s, err := AssumeRole(amz, roleArn)
-		if err != nil {
-			return err
-		}
-
-		creds[idx] = CredentialsData{
-			Credentials: s,
-			AccountId:   accountID,
-			RoleArn:     roleArn,
-		}
+	s, err := AssumeRole(amz, c.String("role-arn"))
+	if err != nil {
+		return err
 	}
 
-	return JSONWrite(os.Stdout, creds)
+	jsonData, err := json.Marshal(s)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(jsonData))
+	return nil
 }
 
 func AssumeRole(amz *awslogin.Amazon, roleArn string) (*types.Credentials, error) {
@@ -120,15 +90,9 @@ func main() {
 			Required: true,
 		},
 		&cli.StringFlag{
-			Name:     "role-name",
+			Name:     "role-arn",
 			Aliases:  []string{"r"},
-			Usage:    "AWS Role Arn for assuming to",
-			Required: true,
-		},
-		&cli.StringSliceFlag{
-			Name:     "account-ids",
-			Aliases:  []string{"a"},
-			Usage:    "AWS Account ID (can be specified multiple times)",
+			Usage:    "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
 			Required: true,
 		},
 		&cli.BoolFlag{
