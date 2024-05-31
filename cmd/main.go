@@ -7,11 +7,10 @@ import (
 	"os"
 
 	awslogin "github.com/Photosynth-inc/aws-google-login"
-	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	"github.com/urfave/cli/v3"
 )
 
-func handler(_ context.Context, c *cli.Command) (err error) {
+func handler(ctx context.Context, c *cli.Command) (err error) {
 	g := awslogin.NewGoogleConfig(c.String("idp-id"), c.String("sp-id"))
 	authnRequest, err := g.Login()
 	if err != nil {
@@ -28,7 +27,12 @@ func handler(_ context.Context, c *cli.Command) (err error) {
 		return err
 	}
 
-	s, err := AssumeRole(amz, c.String("role-arn"))
+	principalArn, err := amz.GetPrincipalArn(c.String("role-arn"))
+	if err != nil {
+		return err
+	}
+
+	s, err := amz.AssumeRole(ctx, c.String("role-arn"), principalArn)
 	if err != nil {
 		return err
 	}
@@ -40,28 +44,6 @@ func handler(_ context.Context, c *cli.Command) (err error) {
 
 	fmt.Println(string(jsonData))
 	return nil
-}
-
-func AssumeRole(amz *awslogin.Amazon, roleArn string) (*types.Credentials, error) {
-	var principalArn string
-	roles, err := amz.ParseRoles()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range roles {
-		if roleArn == v.RoleArn {
-			principalArn = v.PrincipalArn
-			break
-		}
-	}
-
-	if principalArn == "" {
-		fmt.Println(roleArn, roles)
-		return nil, fmt.Errorf("role is not configured for your user")
-	}
-
-	return amz.AssumeRole(context.TODO(), roleArn, principalArn)
 }
 
 func main() {

@@ -22,7 +22,7 @@ type Role struct {
 }
 
 func (r *Role) String() string {
-	return r.RoleArn
+	return fmt.Sprintf("RoleArn: %s, PrincipalArn: %s", r.RoleArn, r.PrincipalArn)
 }
 
 func NewAmazonConfig(authnRequest string, sessionDuration int64) (*Amazon, error) {
@@ -38,6 +38,21 @@ func NewAmazonConfig(authnRequest string, sessionDuration int64) (*Amazon, error
 
 func (amz *Amazon) GetAssertion() string {
 	return amz.AuthnRequest
+}
+
+func (amz *Amazon) GetPrincipalArn(roleArn string) (string, error) {
+	roles, err := amz.ParseRoles()
+	if err != nil {
+		return "", err
+	}
+
+	for _, v := range roles {
+		if roleArn == v.RoleArn {
+			return v.PrincipalArn, nil
+		}
+	}
+
+	return "", fmt.Errorf("role is not configured for your user")
 }
 
 func (amz *Amazon) parseRole(role string) (*Role, error) {
