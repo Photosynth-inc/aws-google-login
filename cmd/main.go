@@ -36,12 +36,9 @@ func JSONWrite(w io.Writer, data []CredentialsData) error {
 	return nil
 }
 
-func handler(_ context.Context, c *cli.Command) error {
-	var assertion string
-	var err error
-
+func handler(_ context.Context, c *cli.Command) (err error) {
 	g := awslogin.NewGoogleConfig(c.String("idp-id"), c.String("sp-id"))
-	assertion, err = g.Login()
+	assertion, err := g.Login()
 	if err != nil {
 		return err
 	}
@@ -72,8 +69,7 @@ func handler(_ context.Context, c *cli.Command) error {
 		}
 	}
 
-	JSONWrite(os.Stdout, creds)
-	return nil
+	return JSONWrite(os.Stdout, creds)
 }
 
 func AssumeRole(amz *awslogin.Amazon, roleArn string) (*types.Credentials, error) {
@@ -109,7 +105,7 @@ func main() {
 			Name:    "duration-seconds",
 			Aliases: []string{"d"},
 			Usage:   "Session Duration (in seconds)",
-			Value:   43200,
+			Value:   3600,
 		},
 		&cli.StringFlag{
 			Name:     "sp-id",
