@@ -136,9 +136,10 @@ func main() {
 			Required: true,
 		},
 		&cli.BoolFlag{
-			Name:  "saml-assertion",
-			Usage: "Getting SAML assertion XML",
-			Value: false,
+			Name:    "get-saml-assertion",
+			Aliases: []string{"l"},
+			Usage:   "Getting SAML assertion XML",
+			Value:   false,
 		},
 	}
 
