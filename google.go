@@ -28,6 +28,8 @@ func NewGoogleConfig(idpID, spID string) *Google {
 	}
 }
 
+// Login invokes the Playwright browser to login to Google,
+// and returns the `AuthnRequest` (SAMLResponse) captured from the browser request.
 func (g *Google) Login() (resp string, err error) {
 	if err := playwright.Install(); err != nil {
 		return "", fmt.Errorf("could not install playwright: %v", err)
