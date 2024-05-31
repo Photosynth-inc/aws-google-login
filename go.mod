@@ -1,4 +1,4 @@
-module github.com/cucxabong/aws-google-login
+module github.com/Photosynth-inc/aws-google-login
 
 go 1.21
 

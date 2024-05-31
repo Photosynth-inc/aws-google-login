@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 
+	awslogin "github.com/Photosynth-inc/aws-google-login"
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
-	awslogin "github.com/cucxabong/aws-google-login"
 	"github.com/urfave/cli/v3"
 )
 
