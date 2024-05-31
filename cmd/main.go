@@ -17,11 +17,6 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		return err
 	}
 
-	if c.Bool("get-authnrequest") {
-		_, err := fmt.Println(authnRequest)
-		return err
-	}
-
 	amz, err := awslogin.NewAWSConfig(authnRequest, c.Int("duration-seconds"))
 	if err != nil {
 		return err
@@ -76,12 +71,6 @@ func main() {
 			Aliases:  []string{"r"},
 			Usage:    "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
 			Required: true,
-		},
-		&cli.BoolFlag{
-			Name:    "get-authnrequest",
-			Aliases: []string{"l"},
-			Usage:   "Just show the SAML response instead of assuming the role",
-			Value:   false,
 		},
 	}
 
