@@ -22,7 +22,7 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		return err
 	}
 
-	amz, err := awslogin.NewAmazonConfig(authnRequest, c.Int("duration-seconds"))
+	amz, err := awslogin.NewAWSConfig(authnRequest, c.Int("duration-seconds"))
 	if err != nil {
 		return err
 	}

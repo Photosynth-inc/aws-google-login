@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 )
 
-type Amazon struct {
+type AWS struct {
 	AuthnRequest    string
 	SessionDuration int64
 }
@@ -25,18 +25,18 @@ func (r *Role) String() string {
 	return fmt.Sprintf("RoleArn: %s, PrincipalArn: %s", r.RoleArn, r.PrincipalArn)
 }
 
-func NewAmazonConfig(authnRequest string, sessionDuration int64) (*Amazon, error) {
+func NewAWSConfig(authnRequest string, sessionDuration int64) (*AWS, error) {
 	if ok := IsValidSamlAssertion(authnRequest); !ok {
 		return nil, fmt.Errorf("invalid SAML assertion")
 	}
 
-	return &Amazon{
+	return &AWS{
 		AuthnRequest:    authnRequest,
 		SessionDuration: sessionDuration,
 	}, nil
 }
 
-func (amz *Amazon) GetPrincipalArn(roleArn string) (string, error) {
+func (amz *AWS) GetPrincipalArn(roleArn string) (string, error) {
 	roles, err := amz.ParseRoles()
 	if err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func (amz *Amazon) GetPrincipalArn(roleArn string) (string, error) {
 	return "", fmt.Errorf("role is not configured for your user")
 }
 
-func (amz *Amazon) parseRole(role string) (*Role, error) {
+func (amz *AWS) parseRole(role string) (*Role, error) {
 	items := strings.Split(role, ",")
 	if len(items) != 2 {
 		return nil, fmt.Errorf("invalid role string %v", role)
@@ -63,7 +63,7 @@ func (amz *Amazon) parseRole(role string) (*Role, error) {
 	}, nil
 }
 
-func (amz *Amazon) ParseRoles() ([]*Role, error) {
+func (amz *AWS) ParseRoles() ([]*Role, error) {
 	resp := []*Role{}
 	roleValues, err := GetAttributeValuesFromAssertion(amz.AuthnRequest, amz.GetRoleAttrName())
 	if err != nil {
@@ -83,22 +83,22 @@ func (amz *Amazon) ParseRoles() ([]*Role, error) {
 }
 
 // GetRoleAttrName return XML attribute name for Role property
-func (*Amazon) GetRoleAttrName() string {
+func (*AWS) GetRoleAttrName() string {
 	return "https://aws.amazon.com/SAML/Attributes/Role"
 }
 
 // GetRoleSessionNameAttrName return XML attribute name for RoleSessionName property
-func (*Amazon) GetRoleSessionNameAttrName() string {
+func (*AWS) GetRoleSessionNameAttrName() string {
 	return "https://aws.amazon.com/SAML/Attributes/RoleSessionName"
 }
 
 // GetSessionDurationAttrName return XML attribute name for SessionDuration property
-func (*Amazon) GetSessionDurationAttrName() string {
+func (*AWS) GetSessionDurationAttrName() string {
 	return "https://aws.amazon.com/SAML/Attributes/SessionDuration"
 }
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
-func (amz *Amazon) AssumeRole(ctx context.Context, roleArn, principalArn string) (*types.Credentials, error) {
+func (amz *AWS) AssumeRole(ctx context.Context, roleArn, principalArn string) (*types.Credentials, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %v", err)
