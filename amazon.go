@@ -36,10 +36,6 @@ func NewAmazonConfig(authnRequest string, sessionDuration int64) (*Amazon, error
 	}, nil
 }
 
-func (amz *Amazon) GetAssertion() string {
-	return amz.AuthnRequest
-}
-
 func (amz *Amazon) GetPrincipalArn(roleArn string) (string, error) {
 	roles, err := amz.ParseRoles()
 	if err != nil {
@@ -69,7 +65,7 @@ func (amz *Amazon) parseRole(role string) (*Role, error) {
 
 func (amz *Amazon) ParseRoles() ([]*Role, error) {
 	resp := []*Role{}
-	roleValues, err := GetAttributeValuesFromAssertion(amz.GetAssertion(), amz.GetRoleAttrName())
+	roleValues, err := GetAttributeValuesFromAssertion(amz.AuthnRequest, amz.GetRoleAttrName())
 	if err != nil {
 		return nil, err
 	}
