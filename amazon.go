@@ -12,7 +12,7 @@ import (
 )
 
 type Amazon struct {
-	SamlAssertion   string
+	AuthnRequest    string
 	SessionDuration int64
 }
 
@@ -25,19 +25,19 @@ func (r *Role) String() string {
 	return r.RoleArn
 }
 
-func NewAmazonConfig(samlAssertion string, sessionDuration int64) (*Amazon, error) {
-	if ok := IsValidSamlAssertion(samlAssertion); !ok {
+func NewAmazonConfig(authnRequest string, sessionDuration int64) (*Amazon, error) {
+	if ok := IsValidSamlAssertion(authnRequest); !ok {
 		return nil, fmt.Errorf("invalid SAML assertion")
 	}
 
 	return &Amazon{
-		SamlAssertion:   samlAssertion,
+		AuthnRequest:    authnRequest,
 		SessionDuration: sessionDuration,
 	}, nil
 }
 
 func (amz *Amazon) GetAssertion() string {
-	return amz.SamlAssertion
+	return amz.AuthnRequest
 }
 
 func (amz *Amazon) parseRole(role string) (*Role, error) {
@@ -97,7 +97,7 @@ func (amz *Amazon) AssumeRole(ctx context.Context, roleArn, principalArn string)
 		DurationSeconds: aws.Int32(int32(amz.SessionDuration)),
 		PrincipalArn:    aws.String(principalArn),
 		RoleArn:         aws.String(roleArn),
-		SAMLAssertion:   aws.String(amz.SamlAssertion),
+		SAMLAssertion:   aws.String(amz.AuthnRequest),
 	}
 
 	result, err := svc.AssumeRoleWithSAML(ctx, input)

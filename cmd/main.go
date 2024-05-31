@@ -13,17 +13,17 @@ import (
 
 func handler(_ context.Context, c *cli.Command) (err error) {
 	g := awslogin.NewGoogleConfig(c.String("idp-id"), c.String("sp-id"))
-	assertion, err := g.Login()
+	authnRequest, err := g.Login()
 	if err != nil {
 		return err
 	}
 
-	if c.Bool("get-saml-assertion") {
-		_, err := fmt.Println(assertion)
+	if c.Bool("get-authnrequest") {
+		_, err := fmt.Println(authnRequest)
 		return err
 	}
 
-	amz, err := awslogin.NewAmazonConfig(assertion, c.Int("duration-seconds"))
+	amz, err := awslogin.NewAmazonConfig(authnRequest, c.Int("duration-seconds"))
 	if err != nil {
 		return err
 	}
@@ -96,9 +96,9 @@ func main() {
 			Required: true,
 		},
 		&cli.BoolFlag{
-			Name:    "get-saml-assertion",
+			Name:    "get-authnrequest",
 			Aliases: []string{"l"},
-			Usage:   "Getting SAML assertion XML",
+			Usage:   "Just show the SAML response instead of assuming the role",
 			Value:   false,
 		},
 	}
