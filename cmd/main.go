@@ -12,30 +12,10 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-type Options struct {
-	ServiceProviderID  string
-	IdentityProviderID string
-	DurationSeconds    int64
-	RoleName           string
-	AccountIDs         []string
-	SamlAssertion      bool
-}
-
 type CredentialsData struct {
 	*types.Credentials
 	AccountId string
 	RoleArn   string
-}
-
-func NewOptions(c *cli.Command) *Options {
-	return &Options{
-		ServiceProviderID:  c.String("sp-id"),
-		IdentityProviderID: c.String("idp-id"),
-		DurationSeconds:    c.Int("duration-seconds"),
-		RoleName:           c.String("role-name"),
-		AccountIDs:         c.StringSlice("account-ids"),
-		SamlAssertion:      c.Bool("get-saml-assertion"),
-	}
 }
 
 func GetRoleArn(accountID string, roleName string) string {
@@ -59,28 +39,27 @@ func JSONWrite(w io.Writer, data []CredentialsData) error {
 func handler(_ context.Context, c *cli.Command) error {
 	var assertion string
 	var err error
-	opt := NewOptions(c)
 
-	g := awslogin.NewGoogleConfig(opt.IdentityProviderID, opt.ServiceProviderID)
+	g := awslogin.NewGoogleConfig(c.String("idp-id"), c.String("sp-id"))
 	assertion, err = g.Login()
 	if err != nil {
 		return err
 	}
 
-	if opt.SamlAssertion {
+	if c.Bool("get-saml-assertion") {
 		_, err := fmt.Println(assertion)
 		return err
 	}
 
-	amz, err := awslogin.NewAmazonConfig(assertion, int64(opt.DurationSeconds))
+	amz, err := awslogin.NewAmazonConfig(assertion, c.Int("duration-seconds"))
 	if err != nil {
 		return err
 	}
 
-	creds := make([]CredentialsData, len(opt.AccountIDs))
+	creds := make([]CredentialsData, len(c.StringSlice("account-ids")))
 
-	for idx, accountID := range opt.AccountIDs {
-		roleArn := GetRoleArn(accountID, opt.RoleName)
+	for idx, accountID := range c.StringSlice("account-ids") {
+		roleArn := GetRoleArn(accountID, c.String("role-name"))
 		s, err := AssumeRole(amz, roleArn)
 		if err != nil {
 			return err
