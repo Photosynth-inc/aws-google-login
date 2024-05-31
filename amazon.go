@@ -25,11 +25,15 @@ func (r *Role) String() string {
 	return r.RoleArn
 }
 
-func NewAmazonConfig(samlAssertion string, sessionDuration int64) *Amazon {
+func NewAmazonConfig(samlAssertion string, sessionDuration int64) (*Amazon, error) {
+	if ok := IsValidSamlAssertion(samlAssertion); !ok {
+		return nil, fmt.Errorf("invalid SAML assertion")
+	}
+
 	return &Amazon{
 		SamlAssertion:   samlAssertion,
 		SessionDuration: sessionDuration,
-	}
+	}, nil
 }
 
 func (amz *Amazon) GetAssertion() string {

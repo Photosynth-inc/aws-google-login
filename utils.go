@@ -15,16 +15,16 @@ func IsValidSamlAssertion(assertion string) bool {
 
 	parsedSaml, err := saml.ParseEncodedResponse(assertion)
 	if err != nil {
-		panic(err)
+		return false
 	}
 
 	notBefore, err := time.Parse(time.RFC3339Nano, parsedSaml.Assertion.Conditions.NotBefore)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	notOnOrAfter, err := time.Parse(time.RFC3339Nano, parsedSaml.Assertion.Conditions.NotOnOrAfter)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	now := time.Now()
 

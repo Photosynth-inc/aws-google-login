@@ -72,7 +72,10 @@ func handler(c *cli.Context) error {
 		return err
 	}
 
-	amz := awslogin.NewAmazonConfig(assertion, int64(opt.DurationSeconds))
+	amz, err := awslogin.NewAmazonConfig(assertion, int64(opt.DurationSeconds))
+	if err != nil {
+		return err
+	}
 
 	creds := make([]CredentialsData, len(opt.AccountIDs))
 
