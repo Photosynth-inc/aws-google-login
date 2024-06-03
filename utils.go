@@ -64,3 +64,11 @@ func ConfigDirRoot() string {
 func ConfigEntry(name string) string {
 	return filepath.Join(ConfigDirRoot(), name)
 }
+
+func AWSConfigPath() string {
+	return filepath.Join(must(os.UserHomeDir()), ".aws/config")
+}
+
+func AWSCredPath() string {
+	return filepath.Join(must(os.UserHomeDir()), ".aws/credentials")
+}

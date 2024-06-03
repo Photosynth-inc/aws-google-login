@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.10
 	github.com/playwright-community/playwright-go v0.4201.1
 	github.com/urfave/cli/v3 v3.0.0-alpha9
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (

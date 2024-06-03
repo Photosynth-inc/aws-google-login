@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -21,24 +20,20 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 	if err != nil {
 		return err
 	}
-
 	principalArn, err := amz.GetPrincipalArn(c.String("role-arn"))
 	if err != nil {
 		return err
 	}
-
-	s, err := amz.AssumeRole(ctx, c.String("role-arn"), principalArn)
+	creds, err := amz.AssumeRole(ctx, c.String("role-arn"), principalArn)
 	if err != nil {
 		return err
 	}
 
-	jsonData, err := json.Marshal(s)
-	if err != nil {
-		return err
+	awsCreds := &awslogin.AWSCredentials{
+		Profile:     c.String("profile"),
+		Credentials: creds,
 	}
-
-	fmt.Println(string(jsonData))
-	return nil
+	return awsCreds.SaveTo(awslogin.AWSCredPath())
 }
 
 func main() {
@@ -47,7 +42,14 @@ func main() {
 		Usage:  "Acquire temporary AWS credentials via Google SSO (SAML v2)",
 		Action: handler,
 	}
+
 	app.Flags = []cli.Flag{
+		&cli.StringFlag{
+			Name:    "profile",
+			Aliases: []string{"p"},
+			Usage:   "AWS Profile to use",
+			Value:   "akerun",
+		},
 		&cli.IntFlag{
 			Name:    "duration-seconds",
 			Aliases: []string{"d"},
