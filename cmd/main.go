@@ -6,6 +6,7 @@ import (
 	"os"
 
 	awslogin "github.com/Photosynth-inc/aws-google-login"
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v3"
 )
 
@@ -88,6 +89,19 @@ func main() {
 				Name:    "role-arn",
 				Aliases: []string{"r"},
 				Usage:   "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
+			},
+			&cli.StringFlag{
+				Name:       "log",
+				Usage:      "change Log level, choose from: [trace | debug | info | warn | error | fatal | panic]",
+				Persistent: true,
+				Action: func(_ context.Context, cmd *cli.Command, flag string) error {
+					if level, err := zerolog.ParseLevel(cmd.String("log")); err != nil {
+						return err
+					} else {
+						zerolog.SetGlobalLevel(level)
+						return nil
+					}
+				},
 			},
 		},
 	}
