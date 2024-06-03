@@ -7,30 +7,18 @@ import (
 	"github.com/playwright-community/playwright-go"
 )
 
-type Google struct {
-	IdpID string
-	SpID  string
-}
-
-func (g *Google) LoginURL() string {
+func (cfg *AWSConfig) LoginURL() string {
 	return fmt.Sprintf("https://accounts.google.com/o/saml2/initsso?idpid=%s&spid=%s&forceauthn=false",
-		g.IdpID, g.SpID)
+		cfg.Google.GoogleIDPID, cfg.Google.GoogleSPID)
 }
 
-func (g *Google) WaitURL() string {
+func (cfg *AWSConfig) WaitURL() string {
 	return "https://signin.aws.amazon.com/saml"
-}
-
-func NewGoogleConfig(idpID, spID string) *Google {
-	return &Google{
-		IdpID: idpID,
-		SpID:  spID,
-	}
 }
 
 // Login invokes the Playwright browser to login to Google,
 // and returns the `AuthnRequest` (SAMLResponse) captured from the browser request.
-func (g *Google) Login() (resp string, err error) {
+func (cfg *AWSConfig) Login() (resp string, err error) {
 	if err := playwright.Install(); err != nil {
 		return "", fmt.Errorf("could not install playwright: %v", err)
 	}
@@ -55,8 +43,8 @@ func (g *Google) Login() (resp string, err error) {
 	}
 
 	page.OnRequest(func(req playwright.Request) {
-		if req.URL() == g.WaitURL() {
-			fmt.Println("Request received, processing...")
+		if req.URL() == cfg.WaitURL() {
+			fmt.Println("Request received, processincfg...")
 			data, _ := req.PostData()
 			values, _ := url.ParseQuery(data)
 			resp = values.Get("SAMLResponse")
@@ -64,10 +52,10 @@ func (g *Google) Login() (resp string, err error) {
 	})
 
 	fmt.Println("Please login to your Google account and press any key to continue...")
-	if _, err := page.Goto(g.LoginURL()); err != nil {
+	if _, err := page.Goto(cfg.LoginURL()); err != nil {
 		return "", fmt.Errorf("could not goto: %v", err)
 	}
-	page.WaitForURL(g.WaitURL())
+	page.WaitForURL(cfg.WaitURL())
 
 	if err = page.Close(); err != nil {
 		return "", fmt.Errorf("could not close page: %v", err)

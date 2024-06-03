@@ -15,7 +15,7 @@ type AWSConfig struct {
 type AWSConfig_GoogleConfig struct {
 	AskRole        bool
 	Keyring        bool
-	Duration       int
+	Duration       int64
 	GoogleIDPID    string
 	GoogleSPID     string
 	U2FDisabled    bool
@@ -40,7 +40,7 @@ func LoadConfig(path, profile string) (*AWSConfig, error) {
 		Google: AWSConfig_GoogleConfig{
 			AskRole:        section.Key("google_config.ask_role").MustBool(true),
 			Keyring:        section.Key("google_config.keyring").MustBool(false),
-			Duration:       section.Key("google_config.duration").MustInt(3600),
+			Duration:       section.Key("google_config.duration").MustInt64(3600),
 			GoogleIDPID:    section.Key("google_config.google_idp_id").String(),
 			GoogleSPID:     section.Key("google_config.google_sp_id").String(),
 			U2FDisabled:    section.Key("google_config.u2f_disabled").MustBool(false),

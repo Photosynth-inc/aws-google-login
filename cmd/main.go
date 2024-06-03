@@ -10,27 +10,47 @@ import (
 )
 
 func handler(ctx context.Context, c *cli.Command) (err error) {
-	g := awslogin.NewGoogleConfig(c.String("idp-id"), c.String("sp-id"))
+	g, err := awslogin.LoadConfig(awslogin.AWSConfigPath(), c.String("profile"))
+	if err != nil {
+		return err
+	}
+
+	// Override the configuration if the flags are set
+	{
+		if c.String("sp-id") != "" {
+			g.Google.GoogleSPID = c.String("sp-id")
+		}
+		if c.String("idp-id") != "" {
+			g.Google.GoogleIDPID = c.String("idp-id")
+		}
+		if c.String("role-arn") == "" {
+			g.Google.RoleARN = c.String("role-arn")
+		}
+		if c.Int("duration-seconds") != 0 {
+			g.Google.Duration = c.Int("duration-seconds")
+		}
+	}
+
 	authnRequest, err := g.Login()
 	if err != nil {
 		return err
 	}
 
-	amz, err := awslogin.NewAWSConfig(authnRequest, c.Int("duration-seconds"))
+	amz, err := awslogin.NewAWSConfig(authnRequest, g.Google.Duration)
 	if err != nil {
 		return err
 	}
-	principalArn, err := amz.GetPrincipalArn(c.String("role-arn"))
+	principalArn, err := amz.GetPrincipalArn(g.Google.RoleARN)
 	if err != nil {
 		return err
 	}
-	creds, err := amz.AssumeRole(ctx, c.String("role-arn"), principalArn)
+	creds, err := amz.AssumeRole(ctx, g.Google.RoleARN, principalArn)
 	if err != nil {
 		return err
 	}
 
 	awsCreds := &awslogin.AWSCredentials{
-		Profile:     c.String("profile"),
+		Profile:     g.Profile,
 		Credentials: creds,
 	}
 	return awsCreds.SaveTo(awslogin.AWSCredPath())
@@ -55,22 +75,19 @@ func main() {
 				Value:   3600,
 			},
 			&cli.StringFlag{
-				Name:     "sp-id",
-				Aliases:  []string{"s"},
-				Usage:    "Service Provider ID",
-				Required: true,
+				Name:    "sp-id",
+				Aliases: []string{"s"},
+				Usage:   "Service Provider ID",
 			},
 			&cli.StringFlag{
-				Name:     "idp-id",
-				Aliases:  []string{"i"},
-				Usage:    "Identity Provider ID",
-				Required: true,
+				Name:    "idp-id",
+				Aliases: []string{"i"},
+				Usage:   "Identity Provider ID",
 			},
 			&cli.StringFlag{
-				Name:     "role-arn",
-				Aliases:  []string{"r"},
-				Usage:    "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
-				Required: true,
+				Name:    "role-arn",
+				Aliases: []string{"r"},
+				Usage:   "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
 			},
 		},
 	}
