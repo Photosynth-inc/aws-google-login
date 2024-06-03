@@ -41,38 +41,37 @@ func main() {
 		Name:   "aws-google-login",
 		Usage:  "Acquire temporary AWS credentials via Google SSO (SAML v2)",
 		Action: handler,
-	}
-
-	app.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:    "profile",
-			Aliases: []string{"p"},
-			Usage:   "AWS Profile to use",
-			Value:   "akerun",
-		},
-		&cli.IntFlag{
-			Name:    "duration-seconds",
-			Aliases: []string{"d"},
-			Usage:   "Session Duration (in seconds)",
-			Value:   3600,
-		},
-		&cli.StringFlag{
-			Name:     "sp-id",
-			Aliases:  []string{"s"},
-			Usage:    "Service Provider ID",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:     "idp-id",
-			Aliases:  []string{"i"},
-			Usage:    "Identity Provider ID",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:     "role-arn",
-			Aliases:  []string{"r"},
-			Usage:    "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
-			Required: true,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "profile",
+				Aliases: []string{"p"},
+				Usage:   "AWS Profile to use",
+				Value:   "akerun",
+			},
+			&cli.IntFlag{
+				Name:    "duration-seconds",
+				Aliases: []string{"d"},
+				Usage:   "Session Duration (in seconds)",
+				Value:   3600,
+			},
+			&cli.StringFlag{
+				Name:     "sp-id",
+				Aliases:  []string{"s"},
+				Usage:    "Service Provider ID",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "idp-id",
+				Aliases:  []string{"i"},
+				Usage:    "Identity Provider ID",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "role-arn",
+				Aliases:  []string{"r"},
+				Usage:    "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
+				Required: true,
+			},
 		},
 	}
 
