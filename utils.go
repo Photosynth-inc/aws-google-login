@@ -46,13 +46,15 @@ func GetAttributeValuesFromAssertion(assertion, attributeName string) ([]string,
 	return parsedSaml.GetAttributeValues(attributeName), nil
 }
 
-func ConfigDirRoot() string {
-	configDir, err := os.UserConfigDir()
+func must[T any](val T, err error) T {
 	if err != nil {
 		panic(err)
 	}
+	return val
+}
 
-	dir := filepath.Join(configDir, "aws-google-login")
+func ConfigDirRoot() string {
+	dir := filepath.Join(must(os.UserConfigDir()), "aws-google-login")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		panic(err)
 	}
