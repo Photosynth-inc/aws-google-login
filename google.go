@@ -55,7 +55,9 @@ func (cfg *AWSConfig) Login() (resp string, err error) {
 	if _, err := page.Goto(cfg.LoginURL()); err != nil {
 		return "", fmt.Errorf("could not goto: %v", err)
 	}
-	page.WaitForURL(cfg.WaitURL())
+	if err = page.WaitForURL(cfg.WaitURL()); err != nil {
+		return "", fmt.Errorf("could not wait for URL: %v", err)
+	}
 
 	if err = page.Close(); err != nil {
 		return "", fmt.Errorf("could not close page: %v", err)
