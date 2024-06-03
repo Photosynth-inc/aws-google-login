@@ -43,6 +43,7 @@ func (amz *AWS) GetPrincipalArn(roleArn string) (string, error) {
 	}
 
 	for _, v := range roles {
+		logger.Debug().Str("roleArn", roleArn).Str("v.RoleArn", v.RoleArn).Msg("role found")
 		if roleArn == v.RoleArn {
 			return v.PrincipalArn, nil
 		}

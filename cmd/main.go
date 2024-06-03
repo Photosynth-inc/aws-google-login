@@ -24,7 +24,7 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		if c.String("idp-id") != "" {
 			g.Google.GoogleIDPID = c.String("idp-id")
 		}
-		if c.String("role-arn") == "" {
+		if c.String("role-arn") != "" {
 			g.Google.RoleARN = c.String("role-arn")
 		}
 		if c.Int("duration-seconds") != 0 {
@@ -94,6 +94,7 @@ func main() {
 				Name:       "log",
 				Usage:      "change Log level, choose from: [trace | debug | info | warn | error | fatal | panic]",
 				Persistent: true,
+				Value:      "warn",
 				Action: func(_ context.Context, cmd *cli.Command, flag string) error {
 					if level, err := zerolog.ParseLevel(cmd.String("log")); err != nil {
 						return err
