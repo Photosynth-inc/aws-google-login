@@ -33,7 +33,9 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		}
 	}
 
-	authnRequest, err := g.Login()
+	authnRequest, err := g.Login(&awslogin.LoginOptions{
+		Verbose: zerolog.GlobalLevel() < zerolog.WarnLevel,
+	})
 	if err != nil {
 		return err
 	}
