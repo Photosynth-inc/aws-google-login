@@ -6,6 +6,7 @@ import (
 	"os"
 
 	awslogin "github.com/Photosynth-inc/aws-google-login"
+	"github.com/manifoldco/promptui"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v3"
 )
@@ -42,10 +43,29 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		return err
 	}
 
-	role, err := amz.ResolveRole(g.Google.RoleARN)
-	if err != nil {
-		return err
+	var role *awslogin.Role
+	if c.Bool("select-role-interactivelly") {
+		roles, err := amz.ResolveAliases(ctx)
+		if err != nil {
+			return err
+		}
+		prompt := promptui.Select{
+			Label: "Select AWS Role",
+			Items: roles,
+			Size:  10,
+		}
+		index, _, err := prompt.Run()
+		if err != nil {
+			return fmt.Errorf("prompt failed %v", err)
+		}
+		role = roles[index]
+	} else {
+		role, err = amz.ResolveRole(g.Google.RoleARN)
+		if err != nil {
+			return err
+		}
 	}
+
 	creds, err := amz.AssumeRole(ctx, role)
 	if err != nil {
 		return err
@@ -55,7 +75,12 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		Profile:     g.Profile,
 		Credentials: creds,
 	}
-	return awsCreds.SaveTo(awslogin.AWSCredPath())
+
+	if err := awsCreds.SaveTo(awslogin.AWSCredPath()); err != nil {
+		return err
+	}
+	fmt.Println("Temporary AWS credentials have been saved to", awslogin.AWSCredPath())
+	return nil
 }
 
 func main() {
@@ -90,6 +115,12 @@ func main() {
 				Name:    "role-arn",
 				Aliases: []string{"r"},
 				Usage:   "AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name",
+			},
+			&cli.BoolFlag{
+				Name:    "select-role-interactivelly",
+				Aliases: []string{"l"},
+				Usage:   "Choose AWS Role interactively. If set, `role-arn` will be ignored",
+				Value:   false,
 			},
 			&cli.StringFlag{
 				Name:       "log",

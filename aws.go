@@ -7,8 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -25,10 +28,23 @@ type AWS struct {
 type Role struct {
 	RoleArn      string `json:"role_arn"`
 	PrincipalArn string `json:"principal_arn"`
+	AccountAlias string `json:"account_alias"`
 }
 
 func (r *Role) String() string {
-	return fmt.Sprintf("RoleArn: %s, PrincipalArn: %s", r.RoleArn, r.PrincipalArn)
+	if r.AccountAlias != "" {
+		return fmt.Sprintf("%s (%s)", r.AccountAlias, r.AccountID())
+	} else {
+		return r.RoleArn
+	}
+}
+
+func (r *Role) AccountID() string {
+	items := strings.Split(r.RoleArn, ":") // arn:aws:iam::123456789012:role/role-name -> [arn, aws, iam, 123456789012, role, role-name]
+	if len(items) < 5 {
+		return "unknown"
+	}
+	return items[4]
 }
 
 func NewAWSConfig(authnRequest string, config *AWSConfig) (*AWS, error) {
@@ -108,4 +124,65 @@ func (amz *AWS) AssumeRole(ctx context.Context, role *Role) (*types.Credentials,
 	}
 
 	return result.Credentials, nil
+}
+
+func (amz *AWS) createConfig(creds *types.Credentials) aws.Config {
+	credProvider := credentials.NewStaticCredentialsProvider(
+		*creds.AccessKeyId,
+		*creds.SecretAccessKey,
+		*creds.SessionToken,
+	)
+
+	return aws.Config{
+		Credentials: credProvider,
+		Region:      amz.Config.Region,
+	}
+}
+
+// resolveAlias resolves the account alias with the given role.
+// This assumes that there is only one account alias for the given role.
+func (amz *AWS) resolveAlias(ctx context.Context, role *Role) (*Role, error) {
+	creds, err := amz.AssumeRole(ctx, role)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := iam.
+		NewFromConfig(amz.createConfig(creds)).
+		ListAccountAliases(ctx, &iam.ListAccountAliasesInput{})
+
+	if err != nil {
+		return nil, err
+	} else if len(out.AccountAliases) == 0 {
+		return nil, fmt.Errorf("no account alias found")
+	} else {
+		role.AccountAlias = out.AccountAliases[0]
+		return role, err
+	}
+}
+
+func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
+	roles, err := amz.ParseRoles()
+	if err != nil {
+		return nil, err
+	}
+
+	eg := errgroup.Group{}
+
+	// Resolve all aliases
+	for i, role := range roles {
+		i, role := i, role
+		eg.Go(func() error {
+			resolved, err := amz.resolveAlias(ctx, role)
+			if err != nil {
+				return err
+			}
+
+			logger.Debug().Str("alias", fmt.Sprintf("%+v", resolved.AccountAlias)).Msg("account alias found")
+			roles[i] = resolved
+			return nil
+		})
+	}
+	err = eg.Wait()
+	return roles, err
 }
