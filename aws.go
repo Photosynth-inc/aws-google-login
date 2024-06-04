@@ -11,6 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 )
 
+const (
+	XmlAttrGetRole            = "https://aws.amazon.com/SAML/Attributes/Role"
+	XmlAttrGetRoleSessionName = "https://aws.amazon.com/SAML/Attributes/RoleSessionName"
+	XmlAttrGetSessionDuration = "https://aws.amazon.com/SAML/Attributes/SessionDuration"
+)
+
 type AWS struct {
 	AuthnRequest    string
 	SessionDuration int64
@@ -50,7 +56,7 @@ func (amz *AWS) parseRole(role string) (*Role, error) {
 
 func (amz *AWS) ParseRoles() ([]*Role, error) {
 	resp := []*Role{}
-	roleValues, err := GetAttributeValuesFromAssertion(amz.AuthnRequest, amz.GetRoleAttrName())
+	roleValues, err := GetAttributeValuesFromAssertion(amz.AuthnRequest, XmlAttrGetRole)
 	if err != nil {
 		return nil, err
 	}
@@ -80,21 +86,6 @@ func (amz *AWS) ResolveRole(roleArn string) (*Role, error) {
 		}
 	}
 	return nil, fmt.Errorf("role is not configured for your user")
-}
-
-// GetRoleAttrName return XML attribute name for Role property
-func (*AWS) GetRoleAttrName() string {
-	return "https://aws.amazon.com/SAML/Attributes/Role"
-}
-
-// GetRoleSessionNameAttrName return XML attribute name for RoleSessionName property
-func (*AWS) GetRoleSessionNameAttrName() string {
-	return "https://aws.amazon.com/SAML/Attributes/RoleSessionName"
-}
-
-// GetSessionDurationAttrName return XML attribute name for SessionDuration property
-func (*AWS) GetSessionDurationAttrName() string {
-	return "https://aws.amazon.com/SAML/Attributes/SessionDuration"
 }
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
