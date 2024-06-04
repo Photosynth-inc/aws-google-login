@@ -94,7 +94,6 @@ func main() {
 				Name:       "log",
 				Usage:      "change Log level, choose from: [trace | debug | info | warn | error | fatal | panic]",
 				Persistent: true,
-				Value:      "warn",
 				Action: func(_ context.Context, cmd *cli.Command, flag string) error {
 					if level, err := zerolog.ParseLevel(cmd.String("log")); err != nil {
 						return err
@@ -106,6 +105,9 @@ func main() {
 			},
 		},
 	}
+
+	// set default / weirdly --log flag does not work if not set
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	err := app.Run(context.Background(), os.Args)
 	if err != nil {
