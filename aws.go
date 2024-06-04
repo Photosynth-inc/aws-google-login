@@ -36,22 +36,6 @@ func NewAWSConfig(authnRequest string, sessionDuration int64) (*AWS, error) {
 	}, nil
 }
 
-func (amz *AWS) GetPrincipalArn(roleArn string) (string, error) {
-	roles, err := amz.ParseRoles()
-	if err != nil {
-		return "", err
-	}
-
-	for _, v := range roles {
-		logger.Debug().Str("roleArn", roleArn).Str("v.RoleArn", v.RoleArn).Msg("role found")
-		if roleArn == v.RoleArn {
-			return v.PrincipalArn, nil
-		}
-	}
-
-	return "", fmt.Errorf("role is not configured for your user")
-}
-
 func (amz *AWS) parseRole(role string) (*Role, error) {
 	items := strings.Split(role, ",")
 	if len(items) != 2 {
@@ -83,6 +67,21 @@ func (amz *AWS) ParseRoles() ([]*Role, error) {
 	return resp, nil
 }
 
+func (amz *AWS) ResolveRole(roleArn string) (*Role, error) {
+	roles, err := amz.ParseRoles()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range roles {
+		logger.Debug().Str("roleArn", roleArn).Str("v.RoleArn", v.RoleArn).Msg("role found")
+		if roleArn == v.RoleArn {
+			return v, nil
+		}
+	}
+	return nil, fmt.Errorf("role is not configured for your user")
+}
+
 // GetRoleAttrName return XML attribute name for Role property
 func (*AWS) GetRoleAttrName() string {
 	return "https://aws.amazon.com/SAML/Attributes/Role"
@@ -99,7 +98,7 @@ func (*AWS) GetSessionDurationAttrName() string {
 }
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
-func (amz *AWS) AssumeRole(ctx context.Context, roleArn, principalArn string) (*types.Credentials, error) {
+func (amz *AWS) AssumeRole(ctx context.Context, role *Role) (*types.Credentials, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %v", err)
@@ -107,8 +106,8 @@ func (amz *AWS) AssumeRole(ctx context.Context, roleArn, principalArn string) (*
 	svc := sts.NewFromConfig(cfg)
 	input := &sts.AssumeRoleWithSAMLInput{
 		DurationSeconds: aws.Int32(int32(amz.SessionDuration)),
-		PrincipalArn:    aws.String(principalArn),
-		RoleArn:         aws.String(roleArn),
+		PrincipalArn:    aws.String(role.PrincipalArn),
+		RoleArn:         aws.String(role.RoleArn),
 		SAMLAssertion:   aws.String(amz.AuthnRequest),
 	}
 

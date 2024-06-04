@@ -41,11 +41,12 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 	if err != nil {
 		return err
 	}
-	principalArn, err := amz.GetPrincipalArn(g.Google.RoleARN)
+
+	role, err := amz.ResolveRole(g.Google.RoleARN)
 	if err != nil {
 		return err
 	}
-	creds, err := amz.AssumeRole(ctx, g.Google.RoleARN, principalArn)
+	creds, err := amz.AssumeRole(ctx, role)
 	if err != nil {
 		return err
 	}
