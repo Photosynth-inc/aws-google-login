@@ -18,8 +18,8 @@ const (
 )
 
 type AWS struct {
-	AuthnRequest    string
-	SessionDuration int64
+	AuthnRequest string
+	Config       *AWSConfig
 }
 
 type Role struct {
@@ -31,14 +31,14 @@ func (r *Role) String() string {
 	return fmt.Sprintf("RoleArn: %s, PrincipalArn: %s", r.RoleArn, r.PrincipalArn)
 }
 
-func NewAWSConfig(authnRequest string, sessionDuration int64) (*AWS, error) {
+func NewAWSConfig(authnRequest string, config *AWSConfig) (*AWS, error) {
 	if ok := IsValidSamlAssertion(authnRequest); !ok {
 		return nil, fmt.Errorf("invalid SAML assertion")
 	}
 
 	return &AWS{
-		AuthnRequest:    authnRequest,
-		SessionDuration: sessionDuration,
+		AuthnRequest: authnRequest,
+		Config:       config,
 	}, nil
 }
 
@@ -96,7 +96,7 @@ func (amz *AWS) AssumeRole(ctx context.Context, role *Role) (*types.Credentials,
 	}
 	svc := sts.NewFromConfig(cfg)
 	input := &sts.AssumeRoleWithSAMLInput{
-		DurationSeconds: aws.Int32(int32(amz.SessionDuration)),
+		DurationSeconds: aws.Int32(int32(amz.Config.Google.Duration)),
 		PrincipalArn:    aws.String(role.PrincipalArn),
 		RoleArn:         aws.String(role.RoleArn),
 		SAMLAssertion:   aws.String(amz.AuthnRequest),

@@ -37,7 +37,7 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 		return err
 	}
 
-	amz, err := awslogin.NewAWSConfig(authnRequest, g.Google.Duration)
+	amz, err := awslogin.NewAWSConfig(authnRequest, g)
 	if err != nil {
 		return err
 	}
