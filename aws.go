@@ -152,13 +152,16 @@ func (amz *AWS) resolveAlias(ctx context.Context, role *Role) (*Role, error) {
 		ListAccountAliases(ctx, &iam.ListAccountAliasesInput{})
 
 	if err != nil {
-		return nil, err
+		logger.Debug().Err(err).Msg("ListAccountAliases failed, fallback to account ID")
+		role.AccountAlias = role.AccountID()
 	} else if len(out.AccountAliases) == 0 {
-		return nil, fmt.Errorf("no account alias found")
+		logger.Debug().Msg("no account alias found, fallback to account ID")
+		role.AccountAlias = role.AccountID()
 	} else {
 		role.AccountAlias = out.AccountAliases[0]
-		return role, err
 	}
+
+	return role, nil
 }
 
 func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
