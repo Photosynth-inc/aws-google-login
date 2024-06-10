@@ -45,3 +45,9 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+brews:
+  - repository:
+      owner: Photosynth-inc # Homebrew Taps 用のリポジトリのオーナー名
+      name: homebrew-tap # Homebrew Taps 用のリポジトリ名
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}" # `TAP_GITHUB_TOKEN` 環境変数をトークンとして使うようにする
