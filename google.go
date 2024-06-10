@@ -7,37 +7,32 @@ import (
 	"github.com/playwright-community/playwright-go"
 )
 
-type Google struct {
-	IdpID string
-	SpID  string
-}
-
-func (g *Google) LoginURL() string {
+func (cfg *AWSConfig) LoginURL() string {
 	return fmt.Sprintf("https://accounts.google.com/o/saml2/initsso?idpid=%s&spid=%s&forceauthn=false",
-		g.IdpID, g.SpID)
+		cfg.Google.GoogleIDPID, cfg.Google.GoogleSPID)
 }
 
-func (g *Google) WaitURL() string {
+func (cfg *AWSConfig) WaitURL() string {
 	return "https://signin.aws.amazon.com/saml"
 }
 
-func NewGoogleConfig(idpID, spID string) *Google {
-	return &Google{
-		IdpID: idpID,
-		SpID:  spID,
-	}
+type LoginOptions struct {
+	Verbose bool
 }
 
 // Login invokes the Playwright browser to login to Google,
 // and returns the `AuthnRequest` (SAMLResponse) captured from the browser request.
-func (g *Google) Login() (resp string, err error) {
-	if err := playwright.Install(); err != nil {
+func (cfg *AWSConfig) Login(opt *LoginOptions) (resp string, err error) {
+	pOpt := &playwright.RunOptions{
+		Verbose:  opt.Verbose,
+		Browsers: []string{"chromium"},
+	}
+
+	if err := playwright.Install(pOpt); err != nil {
 		return "", fmt.Errorf("could not install playwright: %v", err)
 	}
 
-	pw, err := playwright.Run(&playwright.RunOptions{
-		Browsers: []string{"chromium"},
-	})
+	pw, err := playwright.Run(pOpt)
 	if err != nil {
 		return "", fmt.Errorf("unable to run playwright %v", err)
 	}
@@ -55,7 +50,7 @@ func (g *Google) Login() (resp string, err error) {
 	}
 
 	page.OnRequest(func(req playwright.Request) {
-		if req.URL() == g.WaitURL() {
+		if req.URL() == cfg.WaitURL() {
 			fmt.Println("Request received, processing...")
 			data, _ := req.PostData()
 			values, _ := url.ParseQuery(data)
@@ -63,11 +58,13 @@ func (g *Google) Login() (resp string, err error) {
 		}
 	})
 
-	fmt.Println("Please login to your Google account and press any key to continue...")
-	if _, err := page.Goto(g.LoginURL()); err != nil {
+	fmt.Println("Please login to your Google account in the browser...")
+	if _, err := page.Goto(cfg.LoginURL()); err != nil {
 		return "", fmt.Errorf("could not goto: %v", err)
 	}
-	page.WaitForURL(g.WaitURL())
+	if err = page.WaitForURL(cfg.WaitURL()); err != nil {
+		return "", fmt.Errorf("could not wait for URL: %v", err)
+	}
 
 	if err = page.Close(); err != nil {
 		return "", fmt.Errorf("could not close page: %v", err)
