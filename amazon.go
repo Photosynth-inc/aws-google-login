@@ -1,12 +1,14 @@
 package awslogin
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 )
 
 type Amazon struct {
@@ -23,11 +25,15 @@ func (r *Role) String() string {
 	return r.RoleArn
 }
 
-func NewAmazonConfig(samlAssertion string, sessionDuration int64) *Amazon {
+func NewAmazonConfig(samlAssertion string, sessionDuration int64) (*Amazon, error) {
+	if ok := IsValidSamlAssertion(samlAssertion); !ok {
+		return nil, fmt.Errorf("invalid SAML assertion")
+	}
+
 	return &Amazon{
 		SamlAssertion:   samlAssertion,
 		SessionDuration: sessionDuration,
-	}
+	}, nil
 }
 
 func (amz *Amazon) GetAssertion() string {
@@ -37,7 +43,7 @@ func (amz *Amazon) GetAssertion() string {
 func (amz *Amazon) parseRole(role string) (*Role, error) {
 	items := strings.Split(role, ",")
 	if len(items) != 2 {
-		return nil, fmt.Errorf("invalid role string %v\n", role)
+		return nil, fmt.Errorf("invalid role string %v", role)
 	}
 
 	return &Role{
@@ -81,18 +87,22 @@ func (*Amazon) GetSessionDurationAttrName() string {
 }
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
-func (amz *Amazon) AssumeRole(roleArn, principalArn string) (*sts.Credentials, error) {
-	svc := sts.New(session.New())
+func (amz *Amazon) AssumeRole(ctx context.Context, roleArn, principalArn string) (*types.Credentials, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load configuration: %v", err)
+	}
+	svc := sts.NewFromConfig(cfg)
 	input := &sts.AssumeRoleWithSAMLInput{
-		DurationSeconds: aws.Int64(amz.SessionDuration),
+		DurationSeconds: aws.Int32(int32(amz.SessionDuration)),
 		PrincipalArn:    aws.String(principalArn),
 		RoleArn:         aws.String(roleArn),
 		SAMLAssertion:   aws.String(amz.SamlAssertion),
 	}
 
-	result, err := svc.AssumeRoleWithSAML(input)
+	result, err := svc.AssumeRoleWithSAML(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("unable to assume role %v\n", err)
+		return nil, fmt.Errorf("unable to assume role %v", err)
 	}
 
 	return result.Credentials, nil

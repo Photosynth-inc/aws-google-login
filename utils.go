@@ -3,7 +3,6 @@ package awslogin
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/RobotsAndPencils/go-saml"
@@ -16,16 +15,16 @@ func IsValidSamlAssertion(assertion string) bool {
 
 	parsedSaml, err := saml.ParseEncodedResponse(assertion)
 	if err != nil {
-		panic(err)
+		return false
 	}
 
 	notBefore, err := time.Parse(time.RFC3339Nano, parsedSaml.Assertion.Conditions.NotBefore)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	notOnOrAfter, err := time.Parse(time.RFC3339Nano, parsedSaml.Assertion.Conditions.NotOnOrAfter)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	now := time.Now()
 
@@ -47,12 +46,19 @@ func GetAttributeValuesFromAssertion(assertion, attributeName string) ([]string,
 	return parsedSaml.GetAttributeValues(attributeName), nil
 }
 
-func NormalizePath(path string) string {
-	homeDir, _ := os.UserHomeDir()
-
-	if strings.HasPrefix(path, "~/") {
-		path = filepath.Join(homeDir, path[2:])
+func ConfigDirRoot() string {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		panic(err)
 	}
 
-	return path
+	dir := filepath.Join(configDir, "aws-google-login")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		panic(err)
+	}
+	return dir
+}
+
+func ConfigEntry(name string) string {
+	return filepath.Join(ConfigDirRoot(), name)
 }
