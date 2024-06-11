@@ -88,9 +88,11 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 func handleConfig(ctx context.Context, c *cli.Command) error {
 	if c.Bool("config_path") {
 		fmt.Println(awslogin.AWSConfigPath())
+		return nil
 	}
 	if c.Bool("credentials_path") {
 		fmt.Println(awslogin.AWSCredPath())
+		return nil
 	}
 
 	cfg, err := awslogin.LoadConfig(awslogin.AWSConfigPath(), c.String("profile"))
@@ -108,7 +110,9 @@ func handleCache(ctx context.Context, c *cli.Command) error {
 			return err
 		}
 		fmt.Println("Cache has been cleared")
+		return nil
 	}
+
 	fmt.Println(awslogin.ConfigDirRoot())
 	return nil
 }
