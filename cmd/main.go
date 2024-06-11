@@ -106,12 +106,12 @@ func main() {
 			&cli.StringFlag{
 				Name:    "sp-id",
 				Aliases: []string{"s"},
-				Usage:   "Service Provider ID",
+				Usage:   fmt.Sprintf("Service Provider ID (default value is in %s)", awslogin.AWSConfigPath()),
 			},
 			&cli.StringFlag{
 				Name:    "idp-id",
 				Aliases: []string{"i"},
-				Usage:   "Identity Provider ID",
+				Usage:   fmt.Sprintf("Identity Provider ID (default value is in %s)", awslogin.AWSConfigPath()),
 			},
 			&cli.StringFlag{
 				Name:    "role-arn",
@@ -121,7 +121,7 @@ func main() {
 			&cli.BoolFlag{
 				Name:    "select-role-interactivelly",
 				Aliases: []string{"l"},
-				Usage:   "Choose AWS Role interactively. If set, `role-arn` will be ignored",
+				Usage:   "choose AWS Role interactively. If set, `role-arn` will be ignored",
 				Value:   false,
 			},
 			&cli.StringFlag{
