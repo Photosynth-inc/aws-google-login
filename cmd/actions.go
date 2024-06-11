@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	awslogin "github.com/Photosynth-inc/aws-google-login"
 	"github.com/manifoldco/promptui"
@@ -106,6 +107,14 @@ func handleConfig(ctx context.Context, c *cli.Command) error {
 
 func handleCache(ctx context.Context, c *cli.Command) error {
 	if c.Bool("clear") {
+		fmt.Printf("Are you sure to clear cache? [y/N] ")
+		var ans string
+		fmt.Fscanln(os.Stdin, &ans)
+		if ans != "y" {
+			fmt.Println("Aborted")
+			return nil
+		}
+
 		if err := awslogin.DeleteBrowserCache(); err != nil {
 			return err
 		}
