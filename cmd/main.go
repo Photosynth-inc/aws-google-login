@@ -69,6 +69,23 @@ func main() {
 				},
 			},
 		},
+		Commands: []*cli.Command{
+			{
+				Name:   "config",
+				Usage:  "Show current configuration",
+				Action: handleConfig,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "config_path",
+						Usage: "Show the aws configuration path",
+					},
+					&cli.BoolFlag{
+						Name:  "credentials_path",
+						Usage: "Show the aws credentials path",
+					},
+				},
+			},
+		},
 	}
 
 	// set default / weirdly --log flag does not work if not set

@@ -84,3 +84,20 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 	fmt.Println("Temporary AWS credentials have been saved to", awslogin.AWSCredPath())
 	return nil
 }
+
+func handleConfig(ctx context.Context, c *cli.Command) error {
+	if c.Bool("config_path") {
+		fmt.Println(awslogin.AWSConfigPath())
+	}
+	if c.Bool("credentials_path") {
+		fmt.Println(awslogin.AWSCredPath())
+	}
+
+	cfg, err := awslogin.LoadConfig(awslogin.AWSConfigPath(), c.String("profile"))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%+v\n", cfg)
+	return nil
+}

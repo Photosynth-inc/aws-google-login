@@ -1,6 +1,8 @@
 package awslogin
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	"gopkg.in/ini.v1"
 )
@@ -10,6 +12,23 @@ type AWSConfig struct {
 	Profile string
 	Region  string
 	Google  AWSConfig_GoogleConfig
+}
+
+func (c *AWSConfig) String() string {
+	return fmt.Sprintf(
+		"Profile: %s\nRegion: %s\nGoogle_Configuration:\n  Ask_Role: %v\n  Keyring: %v\n  Duration: %d\n  Google_IDP_ID: %s\n  Google_SP_ID: %s\n  U2F_Disabled: %v\n  Google_Username: %s\n  BG_Response: %s\n  Role_ARN: %s",
+		c.Profile,
+		c.Region,
+		c.Google.AskRole,
+		c.Google.Keyring,
+		c.Google.Duration,
+		c.Google.GoogleIDPID,
+		c.Google.GoogleSPID,
+		c.Google.U2FDisabled,
+		c.Google.GoogleUserName,
+		c.Google.BGResponse,
+		c.Google.RoleARN,
+	)
 }
 
 type AWSConfig_GoogleConfig struct {
