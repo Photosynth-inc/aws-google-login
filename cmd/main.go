@@ -34,7 +34,8 @@ func handler(ctx context.Context, c *cli.Command) (err error) {
 	}
 
 	authnRequest, err := g.Login(&awslogin.LoginOptions{
-		Verbose: zerolog.GlobalLevel() < zerolog.WarnLevel,
+		Verbose:        zerolog.GlobalLevel() < zerolog.WarnLevel,
+		BrowserTimeout: c.Float("browser-timeout"),
 	})
 	if err != nil {
 		return err
@@ -123,6 +124,12 @@ func main() {
 				Aliases: []string{"l"},
 				Usage:   "choose AWS Role interactively. If set, `role-arn` will be ignored",
 				Value:   false,
+			},
+			&cli.FloatFlag{
+				Name:    "browser-timeout",
+				Aliases: []string{"t"},
+				Usage:   "browser timeout duration in seconds",
+				Value:   60.0,
 			},
 			&cli.StringFlag{
 				Name:       "log",

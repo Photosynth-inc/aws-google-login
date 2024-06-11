@@ -30,6 +30,7 @@ GLOBAL OPTIONS:
    --idp-id value, -i value                            Identity Provider ID (default value is in /Users/daikiwatanabe/.aws/config)
    --role-arn value, -r value                          AWS Role Arn for assuming to, ex: arn:aws:iam::123456789012:role/role-name
    --select-role-interactivelly role-arn, -l role-arn  choose AWS Role interactively. If set, role-arn will be ignored (default: false)
+   --browser-timeout value, -t value                   browser timeout duration in seconds (default: 60)
    --log value                                         change Log level, choose from: [trace | debug | info | warn | error | fatal | panic]
    --help, -h                                          show help (default: false)
-   ```
+```
