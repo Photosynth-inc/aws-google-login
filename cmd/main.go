@@ -49,11 +49,11 @@ func main() {
 				Usage:   "choose AWS Role interactively. If set, 'role-arn' will be ignored",
 				Value:   false,
 			},
-			&cli.FloatFlag{
+			&cli.IntFlag{
 				Name:    "browser-timeout",
 				Aliases: []string{"t"},
 				Usage:   "browser timeout duration in seconds",
-				Value:   60.0,
+				Value:   60,
 			},
 			&cli.StringFlag{
 				Name:       "log",

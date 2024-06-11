@@ -35,7 +35,7 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 
 	authnRequest, err := g.Login(&awslogin.LoginOptions{
 		Verbose:        zerolog.GlobalLevel() < zerolog.WarnLevel,
-		BrowserTimeout: c.Float("browser-timeout"),
+		BrowserTimeout: c.Int("browser-timeout"),
 	})
 	if err != nil {
 		return err
