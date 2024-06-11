@@ -101,3 +101,14 @@ func handleConfig(ctx context.Context, c *cli.Command) error {
 	fmt.Printf("%+v\n", cfg)
 	return nil
 }
+
+func handleCache(ctx context.Context, c *cli.Command) error {
+	if c.Bool("clear") {
+		if err := awslogin.DeleteBrowserCache(); err != nil {
+			return err
+		}
+		fmt.Println("Cache has been cleared")
+	}
+	fmt.Println(awslogin.ConfigDirRoot())
+	return nil
+}

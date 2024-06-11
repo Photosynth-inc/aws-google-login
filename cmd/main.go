@@ -85,6 +85,17 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:   "cache",
+				Usage:  "Manage application's cache",
+				Action: handleCache,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "clear",
+						Usage: "Clear the browser cache (this is not reversible!)",
+					},
+				},
+			},
 		},
 	}
 
