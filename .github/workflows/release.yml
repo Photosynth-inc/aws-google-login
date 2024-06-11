@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0 # Changelog を正しく動作させるために必要
 
       # Go をセットアップ
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
