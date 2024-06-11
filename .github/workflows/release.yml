@@ -12,7 +12,7 @@ jobs:
       contents: write # これがないとリリースを作成できない
     steps:
       # チェックアウト
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Changelog を正しく動作させるために必要
 
