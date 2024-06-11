@@ -21,6 +21,8 @@ USAGE:
    aws-google-login [global options] [command [command options]] [arguments...]
 
 COMMANDS:
+   config   Show current configuration
+   cache    Manage application's cache
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
