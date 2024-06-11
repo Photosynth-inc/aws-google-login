@@ -122,7 +122,7 @@ func main() {
 			&cli.BoolFlag{
 				Name:    "select-role-interactivelly",
 				Aliases: []string{"l"},
-				Usage:   "choose AWS Role interactively. If set, `role-arn` will be ignored",
+				Usage:   "choose AWS Role interactively. If set, 'role-arn' will be ignored",
 				Value:   false,
 			},
 			&cli.FloatFlag{
