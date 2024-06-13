@@ -65,6 +65,10 @@ func ConfigEntry(name string) string {
 	return filepath.Join(ConfigDirRoot(), name)
 }
 
+func DeleteBrowserCache() error {
+	return os.RemoveAll(ConfigEntry("browser"))
+}
+
 func AWSConfigPath() string {
 	return filepath.Join(must(os.UserHomeDir()), ".aws/config")
 }

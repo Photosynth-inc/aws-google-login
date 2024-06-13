@@ -17,7 +17,8 @@ func (cfg *AWSConfig) WaitURL() string {
 }
 
 type LoginOptions struct {
-	Verbose bool
+	Verbose        bool
+	BrowserTimeout int64 // in seconds
 }
 
 // Login invokes the Playwright browser to login to Google,
@@ -40,6 +41,10 @@ func (cfg *AWSConfig) Login(opt *LoginOptions) (resp string, err error) {
 	browser, err := pw.Chromium.LaunchPersistentContext(ConfigEntry("browser"), playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
 	})
+
+	browser.SetDefaultTimeout(1000.0 * float64(opt.BrowserTimeout))
+	browser.SetDefaultNavigationTimeout(1000.0 * float64(opt.BrowserTimeout))
+
 	if err != nil {
 		return "", fmt.Errorf("could not launch a browser %v", err)
 	}
