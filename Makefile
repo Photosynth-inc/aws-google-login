@@ -16,11 +16,6 @@ lint:
 build:
 	go build $(VERBOSE_FLAG) -ldflags=$(BUILD_LDFLAGS) -o $(EXECUTABLE) cmd/*
 
-DIST_DIR = dist
-.PHONY: cross
-cross:
-	GOOS=linux  GOARCH=arm   go build --tags release -ldflags=$(BUILD_LDFLAGS) -trimpath -o ../$(DIST_DIR)/$(EXECUTABLE).linux.arm cmd/*
-	GOOS=linux  GOARCH=amd64 go build --tags release -ldflags=$(BUILD_LDFLAGS) -trimpath -o ../$(DIST_DIR)/$(EXECUTABLE).linux.amd64 cmd/*
-	GOOS=linux  GOARCH=arm64 go build --tags release -ldflags=$(BUILD_LDFLAGS) -trimpath -o ../$(DIST_DIR)/$(EXECUTABLE).linux.arm64 cmd/*
-	GOOS=darwin GOARCH=amd64 go build --tags release -ldflags=$(BUILD_LDFLAGS) -trimpath -o ../$(DIST_DIR)/$(EXECUTABLE).darwin.amd64 cmd/*
-	GOOS=darwin GOARCH=arm64 go build --tags release -ldflags=$(BUILD_LDFLAGS) -trimpath -o ../$(DIST_DIR)/$(EXECUTABLE).darwin.arm64 cmd/*
+.PHONY: goreleaser
+goreleaser:
+	goreleaser release --snapshot --clean
