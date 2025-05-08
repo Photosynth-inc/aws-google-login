@@ -3,6 +3,7 @@ package awslogin
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -187,5 +188,10 @@ func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
 		})
 	}
 	err = eg.Wait()
+
+	// Sort the roles by account alias alphabetically
+	sort.Slice(roles, func(i, j int) bool {
+		return roles[i].AccountAlias < roles[j].AccountAlias
+	})
 	return roles, err
 }

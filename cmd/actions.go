@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	awslogin "github.com/Photosynth-inc/aws-google-login"
 	"github.com/manifoldco/promptui"
@@ -54,8 +55,18 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 		}
 		prompt := promptui.Select{
 			Label: "Select AWS Role",
+			Templates: &promptui.SelectTemplates{
+				Label:    "{{ . }}?",
+				Active:   "▶ {{ .AccountAlias | cyan }} ({{ .AccountID | red }})",
+				Inactive: "  {{ .AccountAlias | cyan }} ({{ .AccountID | red }})",
+				Selected: "▶ {{ .AccountAlias | cyan }} ({{ .AccountID | red }})",
+			},
 			Items: roles,
 			Size:  10,
+			Searcher: func(input string, index int) bool {
+				role := roles[index]
+				return strings.Contains(role.AccountAlias, input)
+			},
 		}
 		index, _, err := prompt.Run()
 		if err != nil {
