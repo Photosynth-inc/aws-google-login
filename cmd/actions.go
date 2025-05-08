@@ -120,7 +120,10 @@ func handleCache(ctx context.Context, c *cli.Command) error {
 	if c.Bool("clear") {
 		fmt.Printf("Are you sure to clear cache? [y/N] ")
 		var ans string
-		fmt.Fscanln(os.Stdin, &ans)
+		_, err := fmt.Fscanln(os.Stdin, &ans)
+		if err != nil {
+			panic(err)
+		}
 		if ans != "y" {
 			fmt.Println("Aborted")
 			return nil
