@@ -191,7 +191,6 @@ func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
 
 	// Resolve all aliases
 	for _, role := range roles {
-		role := role // ループ変数をキャプチャ
 		eg.Go(func() error {
 			resolved, err := amz.resolveAlias(ctx, role)
 
