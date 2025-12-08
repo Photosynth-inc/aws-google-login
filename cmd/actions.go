@@ -95,9 +95,10 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 			Items: displayRoles,
 			Size:  10,
 			Searcher: func(input string, index int) bool {
-				r := roles[index]
-				return strings.Contains(r.AccountAlias, input) ||
-					strings.Contains(r.RoleName(), input)
+				r := displayRoles[index]
+				return strings.Contains(r.Alias, input) ||
+					strings.Contains(r.AccountID, input) ||
+					strings.Contains(r.RoleName, input)
 			},
 		}
 		index, _, err := prompt.Run()
