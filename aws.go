@@ -204,7 +204,7 @@ func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
 					Str("principalArn", role.PrincipalArn).
 					Msg("Failed to assume role, skipping")
 				errorCount++
-				return nil // 他の処理を継続
+				return nil
 			}
 
 			logger.Debug().Str("alias", fmt.Sprintf("%+v", resolved.AccountAlias)).Msg("account alias found")
@@ -215,7 +215,7 @@ func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
 
 	_ = eg.Wait()
 
-	// 全てのロールが失敗した場合
+	// If all roles failed, return an error
 	if len(validRoles) == 0 && errorCount > 0 {
 		return nil, fmt.Errorf("failed to assume any role: all %d roles returned errors", errorCount)
 	}

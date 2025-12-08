@@ -66,7 +66,6 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 			}
 		}
 
-		// 表示用の構造体
 		type displayRole struct {
 			Alias     string
 			AccountID string
