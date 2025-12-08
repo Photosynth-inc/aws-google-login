@@ -58,7 +58,13 @@ func main() {
 			&cli.BoolFlag{
 				Name:    "read-only",
 				Aliases: []string{"ro"},
-				Usage:   "restrict session to read-only permissions (Get*, List*, Describe* actions only)",
+				Usage:   "restrict session to read-only permissions (Get*, List*, Describe* actions only). if this flag is set, --billing-read-only flag will be ignored.",
+				Value:   false,
+			},
+			&cli.BoolFlag{
+				Name:    "billing-read-only",
+				Aliases: []string{"bro"},
+				Usage:   "restrict session to billing read-only permissions (cost explorer, budgets, etc.)",
 				Value:   false,
 			},
 			&cli.StringFlag{

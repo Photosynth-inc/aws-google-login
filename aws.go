@@ -22,9 +22,10 @@ const (
 	XmlAttrGetSessionDuration = "https://aws.amazon.com/SAML/Attributes/SessionDuration"
 )
 
-// ReadOnlyAccessPolicyArn is the ARN of the AWS managed ReadOnlyAccess policy.
-// This policy is used as a session policy when --read-only flag is used.
-const ReadOnlyAccessPolicyArn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+const (
+	ReadOnlyAccessPolicyArn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+	BillingReadOnlyAccessPolicyArn = "arn:aws:iam::aws:policy/AWSBillingReadOnlyAccess"
+)
 
 type AWS struct {
 	AuthnRequest string
@@ -123,6 +124,8 @@ func (amz *AWS) ResolveRole(roleArn string) (*Role, error) {
 type AssumeRoleOptions struct {
 	// ReadOnly restricts the session to read-only permissions when true.
 	ReadOnly bool
+	// BillingReadOnly restricts the session to billing read-only permissions when true.
+	BillingReadOnly bool
 }
 
 // AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role.
@@ -140,11 +143,18 @@ func (amz *AWS) AssumeRole(ctx context.Context, role *Role, opts *AssumeRoleOpti
 		SAMLAssertion:   aws.String(amz.AuthnRequest),
 	}
 
-	if opts != nil && opts.ReadOnly {
-		input.PolicyArns = []types.PolicyDescriptorType{
-			{Arn: aws.String(ReadOnlyAccessPolicyArn)},
+	if opts != nil {
+		if opts.ReadOnly {
+			input.PolicyArns = []types.PolicyDescriptorType{
+				{Arn: aws.String(ReadOnlyAccessPolicyArn)},
+			}
+			logger.Info().Msg("Applying read-only session policy")
+		} else if opts.BillingReadOnly {
+			input.PolicyArns = []types.PolicyDescriptorType{
+				{Arn: aws.String(BillingReadOnlyAccessPolicyArn)},
+			}
+			logger.Info().Msg("Applying billing read-only session policy")
 		}
-		logger.Info().Msg("Applying read-only session policy")
 	}
 
 	result, err := svc.AssumeRoleWithSAML(ctx, input)
