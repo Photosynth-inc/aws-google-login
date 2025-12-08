@@ -53,26 +53,58 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 		if err != nil {
 			return err
 		}
+
+		// 各カラムの最大幅を計算
+		maxAliasLen := 0
+		maxAccountIDLen := 0
+		for _, r := range roles {
+			if len(r.AccountAlias) > maxAliasLen {
+				maxAliasLen = len(r.AccountAlias)
+			}
+			if len(r.AccountID()) > maxAccountIDLen {
+				maxAccountIDLen = len(r.AccountID())
+			}
+		}
+
+		// 表示用の構造体
+		type displayRole struct {
+			Alias     string
+			AccountID string
+			RoleName  string
+			Original  *awslogin.Role
+		}
+
+		displayRoles := make([]displayRole, len(roles))
+		for i, r := range roles {
+			displayRoles[i] = displayRole{
+				Alias:     fmt.Sprintf("%-*s", maxAliasLen, r.AccountAlias),
+				AccountID: fmt.Sprintf("%-*s", maxAccountIDLen, r.AccountID()),
+				RoleName:  r.RoleName(),
+				Original:  r,
+			}
+		}
+
 		prompt := promptui.Select{
 			Label: "Select AWS Role",
 			Templates: &promptui.SelectTemplates{
 				Label:    "{{ . }}?",
-				Active:   "▶ {{ .AccountAlias | cyan }} ({{ .AccountID | red }})",
-				Inactive: "  {{ .AccountAlias | cyan }} ({{ .AccountID | red }})",
-				Selected: "▶ {{ .AccountAlias | cyan }} ({{ .AccountID | red }})",
+				Active:   "▶ {{ .Alias | cyan }} ({{ .AccountID | red }}) # {{ .RoleName | yellow }}",
+				Inactive: "  {{ .Alias | cyan }} ({{ .AccountID | red }}) # {{ .RoleName | yellow }}",
+				Selected: "▶ {{ .Alias | cyan }} ({{ .AccountID | red }}) # {{ .RoleName | yellow }}",
 			},
-			Items: roles,
+			Items: displayRoles,
 			Size:  10,
 			Searcher: func(input string, index int) bool {
-				role := roles[index]
-				return strings.Contains(role.AccountAlias, input)
+				r := roles[index]
+				return strings.Contains(r.AccountAlias, input) ||
+					strings.Contains(r.RoleName(), input)
 			},
 		}
 		index, _, err := prompt.Run()
 		if err != nil {
 			return fmt.Errorf("prompt failed %v", err)
 		}
-		role = roles[index]
+		role = displayRoles[index].Original
 	} else {
 		role, err = amz.ResolveRole(g.Google.RoleARN)
 		if err != nil {

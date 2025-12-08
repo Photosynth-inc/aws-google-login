@@ -49,6 +49,15 @@ func (r *Role) AccountID() string {
 	return items[4]
 }
 
+func (r *Role) RoleName() string {
+	// arn:aws:iam::123456789012:role/role-name -> role-name
+	items := strings.Split(r.RoleArn, "/")
+	if len(items) < 2 {
+		return "unknown"
+	}
+	return items[len(items)-1]
+}
+
 func NewAWSConfig(authnRequest string, config *AWSConfig) (*AWS, error) {
 	if ok := IsValidSamlAssertion(authnRequest); !ok {
 		return nil, fmt.Errorf("invalid SAML assertion")
