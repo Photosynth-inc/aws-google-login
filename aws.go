@@ -22,6 +22,11 @@ const (
 	XmlAttrGetSessionDuration = "https://aws.amazon.com/SAML/Attributes/SessionDuration"
 )
 
+const (
+	ReadOnlyAccessPolicyArn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+	BillingReadOnlyAccessPolicyArn = "arn:aws:iam::aws:policy/AWSBillingReadOnlyAccess"
+)
+
 type AWS struct {
 	AuthnRequest string
 	Config       *AWSConfig
@@ -115,8 +120,17 @@ func (amz *AWS) ResolveRole(roleArn string) (*Role, error) {
 	return nil, fmt.Errorf("role is not configured for your user")
 }
 
-// AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role
-func (amz *AWS) AssumeRole(ctx context.Context, role *Role) (*types.Credentials, error) {
+// AssumeRoleOptions configures how a role is assumed.
+type AssumeRoleOptions struct {
+	// ReadOnly restricts the session to read-only permissions when true.
+	ReadOnly bool
+	// BillingReadOnly restricts the session to billing read-only permissions when true.
+	BillingReadOnly bool
+}
+
+// AssumeRole is going to call sts.AssumeRoleWithSAMLInput to assume to a specific role.
+// If opts is nil, default options are used.
+func (amz *AWS) AssumeRole(ctx context.Context, role *Role, opts *AssumeRoleOptions) (*types.Credentials, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %v", err)
@@ -127,6 +141,20 @@ func (amz *AWS) AssumeRole(ctx context.Context, role *Role) (*types.Credentials,
 		PrincipalArn:    aws.String(role.PrincipalArn),
 		RoleArn:         aws.String(role.RoleArn),
 		SAMLAssertion:   aws.String(amz.AuthnRequest),
+	}
+
+	if opts != nil {
+		if opts.ReadOnly {
+			input.PolicyArns = []types.PolicyDescriptorType{
+				{Arn: aws.String(ReadOnlyAccessPolicyArn)},
+			}
+			logger.Info().Msg("Applying read-only session policy")
+		} else if opts.BillingReadOnly {
+			input.PolicyArns = []types.PolicyDescriptorType{
+				{Arn: aws.String(BillingReadOnlyAccessPolicyArn)},
+			}
+			logger.Info().Msg("Applying billing read-only session policy")
+		}
 	}
 
 	result, err := svc.AssumeRoleWithSAML(ctx, input)
@@ -153,7 +181,7 @@ func (amz *AWS) createConfig(creds *types.Credentials) aws.Config {
 // resolveAlias resolves the account alias with the given role.
 // This assumes that there is only one account alias for the given role.
 func (amz *AWS) resolveAlias(ctx context.Context, role *Role) (*Role, error) {
-	creds, err := amz.AssumeRole(ctx, role)
+	creds, err := amz.AssumeRole(ctx, role, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -55,6 +55,18 @@ func main() {
 				Usage:   "browser timeout duration in seconds",
 				Value:   60,
 			},
+			&cli.BoolFlag{
+				Name:    "read-only",
+				Aliases: []string{"ro"},
+				Usage:   "restrict session to read-only permissions (Get*, List*, Describe* actions only). if this flag is set, --billing-read-only flag will be ignored.",
+				Value:   false,
+			},
+			&cli.BoolFlag{
+				Name:    "billing-read-only",
+				Aliases: []string{"bro"},
+				Usage:   "restrict session to billing read-only permissions (cost explorer, budgets, etc.)",
+				Value:   false,
+			},
 			&cli.StringFlag{
 				Name:       "log",
 				Usage:      "change Log level, choose from: [trace | debug | info | warn | error | fatal | panic]",
@@ -93,6 +105,25 @@ func main() {
 					&cli.BoolFlag{
 						Name:  "clear",
 						Usage: "Clear the browser cache (this is not reversible!)",
+					},
+				},
+			},
+			{
+				Name:   "status",
+				Usage:  "Show current session status",
+				Action: handleStatus,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "profile",
+						Aliases: []string{"p"},
+						Usage:   "AWS Profile to check",
+						Value:   "akerun",
+					},
+					&cli.BoolFlag{
+						Name:    "quiet",
+						Aliases: []string{"q"},
+						Usage:   "Only exit with status code (0=valid, 1=expired/not found)",
+						Value:   false,
 					},
 				},
 			},

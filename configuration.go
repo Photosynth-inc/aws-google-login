@@ -2,6 +2,7 @@ package awslogin
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 	"gopkg.in/ini.v1"
@@ -89,4 +90,46 @@ func (cred *AWSCredentials) SaveTo(path string) error {
 	section.Key("aws_session_expiration").SetValue(cred.Expiration.Format("2006-01-02T15:04:05Z"))
 
 	return cfg.SaveTo(path)
+}
+
+// SessionStatus represents the status of an AWS session
+type SessionStatus struct {
+	Profile    string
+	Expiration time.Time
+	IsValid    bool
+	TimeLeft   time.Duration
+}
+
+// LoadSessionStatus loads the session status for a given profile from the credentials file
+func LoadSessionStatus(path, profile string) (*SessionStatus, error) {
+	cfg, err := ini.Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load credentials file: %w", err)
+	}
+
+	section, err := cfg.GetSection(profile)
+	if err != nil {
+		return nil, fmt.Errorf("profile %q not found in credentials file", profile)
+	}
+
+	expirationStr := section.Key("aws_session_expiration").String()
+	if expirationStr == "" {
+		return nil, fmt.Errorf("no session expiration found for profile %q", profile)
+	}
+
+	expiration, err := time.Parse("2006-01-02T15:04:05Z", expirationStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse expiration time: %w", err)
+	}
+
+	now := time.Now()
+	timeLeft := expiration.Sub(now)
+	isValid := timeLeft > 0
+
+	return &SessionStatus{
+		Profile:    profile,
+		Expiration: expiration,
+		IsValid:    isValid,
+		TimeLeft:   timeLeft,
+	}, nil
 }
