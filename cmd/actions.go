@@ -173,3 +173,39 @@ func handleCache(ctx context.Context, c *cli.Command) error {
 	fmt.Println(awslogin.ConfigDirRoot())
 	return nil
 }
+
+func handleStatus(ctx context.Context, c *cli.Command) error {
+	profile := c.String("profile")
+	status, err := awslogin.LoadSessionStatus(awslogin.AWSCredPath(), profile)
+	if err != nil {
+		fmt.Printf("No valid session found for profile %q\n", profile)
+		if c.Bool("quiet") {
+			os.Exit(1)
+		}
+		return nil
+	}
+
+	if c.Bool("quiet") {
+		if status.IsValid {
+			os.Exit(0)
+		} else {
+			os.Exit(1)
+		}
+	}
+
+	if status.IsValid {
+		hours := int(status.TimeLeft.Hours())
+		minutes := int(status.TimeLeft.Minutes()) % 60
+		seconds := int(status.TimeLeft.Seconds()) % 60
+		fmt.Printf("Profile:    %s\n", status.Profile)
+		fmt.Printf("Status:     valid\n")
+		fmt.Printf("Expires:    %s\n", status.Expiration.Local().Format("2006-01-02 15:04:05"))
+		fmt.Printf("Time left:  %dh %dm %ds\n", hours, minutes, seconds)
+	} else {
+		fmt.Printf("Profile:    %s\n", status.Profile)
+		fmt.Printf("Status:     expired\n")
+		fmt.Printf("Expired at: %s\n", status.Expiration.Local().Format("2006-01-02 15:04:05"))
+	}
+
+	return nil
+}

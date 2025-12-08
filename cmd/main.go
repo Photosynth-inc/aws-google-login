@@ -102,6 +102,25 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:   "status",
+				Usage:  "Show current session status",
+				Action: handleStatus,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "profile",
+						Aliases: []string{"p"},
+						Usage:   "AWS Profile to check",
+						Value:   "akerun",
+					},
+					&cli.BoolFlag{
+						Name:    "quiet",
+						Aliases: []string{"q"},
+						Usage:   "Only exit with status code (0=valid, 1=expired/not found)",
+						Value:   false,
+					},
+				},
+			},
 		},
 	}
 
