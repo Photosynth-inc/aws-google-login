@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -46,6 +47,15 @@ func (r *Role) AccountID() string {
 		return "unknown"
 	}
 	return items[4]
+}
+
+func (r *Role) RoleName() string {
+	// arn:aws:iam::123456789012:role/role-name -> role-name
+	items := strings.Split(r.RoleArn, "/")
+	if len(items) < 2 {
+		return "unknown"
+	}
+	return items[len(items)-1]
 }
 
 func NewAWSConfig(authnRequest string, config *AWSConfig) (*AWS, error) {
@@ -171,27 +181,48 @@ func (amz *AWS) ResolveAliases(ctx context.Context) ([]*Role, error) {
 		return nil, err
 	}
 
+	var (
+		validRoles []*Role
+		errorCount int
+		mu         sync.Mutex
+	)
+
 	eg := errgroup.Group{}
 
 	// Resolve all aliases
-	for i, role := range roles {
-		i, role := i, role
+	for _, role := range roles {
 		eg.Go(func() error {
 			resolved, err := amz.resolveAlias(ctx, role)
+
+			mu.Lock()
+			defer mu.Unlock()
+
 			if err != nil {
-				return err
+				logger.Warn().
+					Err(err).
+					Str("roleArn", role.RoleArn).
+					Str("principalArn", role.PrincipalArn).
+					Msg("Failed to assume role, skipping")
+				errorCount++
+				return nil
 			}
 
 			logger.Debug().Str("alias", fmt.Sprintf("%+v", resolved.AccountAlias)).Msg("account alias found")
-			roles[i] = resolved
+			validRoles = append(validRoles, resolved)
 			return nil
 		})
 	}
-	err = eg.Wait()
+
+	_ = eg.Wait()
+
+	// If all roles failed, return an error
+	if len(validRoles) == 0 && errorCount > 0 {
+		return nil, fmt.Errorf("failed to assume any role: all %d roles returned errors", errorCount)
+	}
 
 	// Sort the roles by account alias alphabetically
-	sort.Slice(roles, func(i, j int) bool {
-		return roles[i].AccountAlias < roles[j].AccountAlias
+	sort.Slice(validRoles, func(i, j int) bool {
+		return validRoles[i].AccountAlias < validRoles[j].AccountAlias
 	})
-	return roles, err
+	return validRoles, nil
 }
