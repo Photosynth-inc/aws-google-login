@@ -112,7 +112,9 @@ func handleMain(ctx context.Context, c *cli.Command) (err error) {
 		}
 	}
 
-	creds, err := amz.AssumeRole(ctx, role)
+	creds, err := amz.AssumeRole(ctx, role, &awslogin.AssumeRoleOptions{
+		ReadOnly: c.Bool("read-only"),
+	})
 	if err != nil {
 		return err
 	}

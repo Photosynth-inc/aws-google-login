@@ -55,6 +55,12 @@ func main() {
 				Usage:   "browser timeout duration in seconds",
 				Value:   60,
 			},
+			&cli.BoolFlag{
+				Name:    "read-only",
+				Aliases: []string{"ro"},
+				Usage:   "restrict session to read-only permissions (Get*, List*, Describe* actions only)",
+				Value:   false,
+			},
 			&cli.StringFlag{
 				Name:       "log",
 				Usage:      "change Log level, choose from: [trace | debug | info | warn | error | fatal | panic]",
