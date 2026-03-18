@@ -56,6 +56,11 @@ func main() {
 				Value:   60,
 			},
 			&cli.BoolFlag{
+				Name:  "headless",
+				Usage: "run browser in headless mode (no visible browser window)",
+				Value: false,
+			},
+			&cli.BoolFlag{
 				Name:    "read-only",
 				Aliases: []string{"ro"},
 				Usage:   "restrict session to read-only permissions (Get*, List*, Describe* actions only). if this flag is set, --billing-read-only flag will be ignored.",
