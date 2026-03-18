@@ -18,6 +18,7 @@ func (cfg *AWSConfig) WaitURL() string {
 
 type LoginOptions struct {
 	Verbose        bool
+	Headless       bool
 	BrowserTimeout int64 // in seconds
 }
 
@@ -39,7 +40,7 @@ func (cfg *AWSConfig) Login(opt *LoginOptions) (resp string, err error) {
 	}
 
 	browser, err := pw.Chromium.LaunchPersistentContext(ConfigEntry("browser"), playwright.BrowserTypeLaunchPersistentContextOptions{
-		Headless: playwright.Bool(false),
+		Headless: playwright.Bool(opt.Headless),
 	})
 
 	browser.SetDefaultTimeout(1000.0 * float64(opt.BrowserTimeout))
