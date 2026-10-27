@@ -1,6 +1,6 @@
 module github.com/Photosynth-inc/aws-google-login
 
-go 1.24.3
+go 1.27.3
 
 require (
 	github.com/RobotsAndPencils/go-saml v0.0.0-20230606195814-29020529affc
